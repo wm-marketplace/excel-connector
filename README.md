@@ -27,7 +27,8 @@ You can import connector dist/excel-connector.zip artifact in WaveMaker Applicat
 
 ## Using Excel Connector in WaveMaker Application
 ## Step 1: Importing the excel-connector to the project
-1.Download the latest zip here
+1.Download the latest zip [here](https://github.com/wavemaker/excel-connector/releases)
+
 2.Import the downloaded excel-connector zip into your app using the Import Resource option in the Connector folder.
 ![image](https://github.com/user-attachments/assets/559480f8-0d28-488d-8a65-dc8b2684cd9d)
 

@@ -26,67 +26,63 @@ mvn clean install
 You can import connector dist/excel-connector.zip artifact in WaveMaker Application using file upload option.
 
 ## Using Excel Connector in WaveMaker Application
+## Step 1: Importing the excel-connector to the project
+1.Download the latest zip here
+2.Import the downloaded excel-connector zip into your app using the Import Resource option in the Connector folder.
+![image](https://github.com/user-attachments/assets/559480f8-0d28-488d-8a65-dc8b2684cd9d)
 
-This connector will be exposing the following four api's 
-##### readExcelAsMap(InputStream inputStream, boolean convertHeadersToFieldNames)
-- This method will convert file inputStream to ``List<Map<String, Object>>`` 
-- convertHeaderToFieldNames if true it will convert headers in the Excel sheet to FieldNames 
-    ``eg: Email address -> emailAddress``
-```
-example:
-      excelInput:
-      sno  name    EmailAddress
-      1    a       a@mail.com
-      2    b       b@mail.com
-     
-      output:
-        if convertHeadersToFieldNames is true
-            [{emailAddress=a@gmail.com, sno=1.0, name=a}, {emailAddress=b@gmail.com, sno=2.0, name=b}] 
-        if convertHeadersToFileNames is false
-            [{Sno=1.0, Email address=a@gmail.com, Name=a}, {Sno=2.0, Email address=b@gmail.com, Name=b}] 
-        we can observe that when convertHeadersToFieldNames is true we will be convering headers to fieldNames eg:Email address -> emailAddress
-     
-```
-```
-Invocation snippet:
+![image](https://github.com/user-attachments/assets/ef64b1bb-5aba-4edb-85b1-c0ab2f36f28e)
 
-List<Map<String, Object>> result = excelConnector.readExcelAsMap(getClass().getClassLoader().getResourceAsStream("sample.xlsx"),
-                false);
+## step2 : Import a databaseService
+1. Import a database into your project.
+   <img width="951" alt="image" src="https://github.com/user-attachments/assets/16cd8cb4-5ab8-43ff-a1a6-b51bc1ec32fc" />
+
+## Step 3: Creating Java Service
+1.Create a Java Service, named ExcelService
+
+2.Add the following import statements in the Java service created in the above step.
+
+```
+import java.util.List;
+import java.io.IOException;
+import org.springframework.web.multipart.MultipartFile;
+import com.wavemaker.connector.excel.ExcelConnector;
+import com.wavemaker.marketplacepreviewer.salesdb.service.ChannelsService;
+import com.wavemaker.marketplacepreviewer.salesdb.Channels;
 ```
 
-##### readExcelAsMap(File file, boolean convertHeadersToFieldNames)
-- This method  is same as the previous method except that it takes ```Java.io.File``` as an input instead of ```Java.io.InputStream```
+3.Follow below code snippet for creating a method to insert data to database table from excel file
 ```
-Invocation snippet:
+@ExposeToClient
+public class ExcelService {
+    private static final Logger logger = LoggerFactory.getLogger(ExcelService.class);
+	@Autowired
+    private ChannelsService channelsService;
+    @Autowired
+    private SecurityService securityService;
+     @Autowired
+    private ExcelConnector excelConnector;
+    
+  public void createUsersFromExcelFile(MultipartFile file) throws IOException {
+        List<Channels> channelsList =  excelConnector.readExcelAsObject(file.getInputStream(), Channels.class);
+        channelsList.forEach(channel -> {
+            channelsService.create(channel);
+        });
+    }
+}
+```
+## Step 4: Integrating with UI
+1.Drag and Drop a FileUpload widget
 
-List<Map<String, Object>> employeeList = excelConnector.readExcelAsMap(new File(getClass().getClassLoader().getResource("sample.xlsx").getPath()),
-                true);
-```
-##### readExcelAsObject(InputStream inputStream, Class<T> cls)
-- This method will convert file inputStream to ``List<clsObjects>`` 
-- cls to target object to which entities to be casted
-```
-example:
-      excelInput:
-      sno  name    EmailAddress
-      1    a       a@mail.com
-      2    b       b@mail.com
-      
-      cls Employee
-      output: [Employee1,Employee2]
-          
-```
-```
-Invocation snippet:
+2.Create a Database CRUD variable for salesDB channel table with name as dbChannelData
 
-List<Employee> employeeList = excelConnector.readExcelAsObject(getClass().getClassLoader().getResourceAsStream("sample.xlsx"),
-                Employee.class);
-```
-##### readExcelAsObject(File file, Class<T> cls)
-- This method  is same as the previous method except that it takes ```Java.io.File``` as an input instead of ```Java.io.InputStream```
-```
-Invocation snippet:
+3.Drag and Drop a Data Table from the existing Database CRUD variable dbChannelData
 
-List<Employee> employeeList = excelConnector.readExcelAsObject(new File(getClass().getClassLoader().getResource("sample.xlsx").getPath()),
-                Employee.class);
-```
+4.Create a JavaService variable for the ExcelService created in the previous step with name as ChannelCreationVariable and bind variable parameter to Widgets.fileupload1.selectedFiles[0] and on the onSuccess event of variable give dbChannelData variable
+
+5.For fileUpload widget onSelect event Callback give variable ChannelCreationVariable
+
+
+
+
+
